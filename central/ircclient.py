@@ -1,14 +1,13 @@
 """IRC client module that sends events to an IRC channel with nice,
 human-readable formatting. Also receives events from registered users."""
 
-from config import cfg
-from pypeul import IRC, Tags
+from . import events, utils
+from .config import cfg
 
-import events
+from pypeul import IRC, Tags
 
 import logging
 import queue
-import utils
 
 
 class Bot(IRC):

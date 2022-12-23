@@ -4,14 +4,7 @@ Initializes and registers the required components then starts the main event
 loop of the process.
 """
 
-import admin
-import buildbot
-import config
-import events
-import github
-import ircclient
-import redmine
-import webserver
+from . import admin, buildbot, config, events, github, ircclient, redmine, webserver
 
 import argparse
 import logging

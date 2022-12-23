@@ -1,10 +1,8 @@
 """Web server module that received events from WebHooks and user interactions
 and shows a list of recent events."""
 
-from config import cfg
-
-import events
-import utils
+from . import events, utils
+from .config import cfg
 
 import base64
 import bottle

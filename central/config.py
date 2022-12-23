@@ -4,7 +4,8 @@ Loads a single configuration file at initialization time and provides access to
 the configuration as a global 'cfg' object.
 """
 
-import utils
+from . import utils
+
 import yaml
 
 cfg = utils.ObjectLike({})

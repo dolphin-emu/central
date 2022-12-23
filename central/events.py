@@ -1,7 +1,7 @@
 """Events module, including all the supported event constructors and the global
 event dispatcher."""
 
-import utils
+from . import utils
 
 import functools
 import logging

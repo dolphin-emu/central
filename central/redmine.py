@@ -3,9 +3,8 @@
 Will potentially also have more complex processing in the future.
 """
 
-from config import cfg
-
-import events
+from . import events
+from .config import cfg
 
 
 class Reactor(events.EventTarget):

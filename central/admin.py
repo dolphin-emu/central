@@ -1,7 +1,8 @@
 """Admin module that handles some central management and administration related
 commands."""
 
-import events
+from . import events
+
 import os
 import os.path
 import sys

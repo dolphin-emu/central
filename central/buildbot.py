@@ -1,10 +1,8 @@
 """Buildbot module that handles communications between the Buildbot and
 GitHub."""
 
-from config import cfg
-
-import events
-import utils
+from . import events, utils
+from .config import cfg
 
 import collections
 import json

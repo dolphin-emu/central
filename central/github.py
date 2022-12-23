@@ -1,14 +1,13 @@
 """GitHub module that handles most interactions with GitHub. It handles
 incoming events but also provides an API."""
 
-from config import cfg
+from . import events, utils
+from .config import cfg
 
-import events
 import json
 import logging
 import textwrap
 import time
-import utils
 
 import requests
 
