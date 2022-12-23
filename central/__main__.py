@@ -51,7 +51,7 @@ def setup_logging(program, verbose=False, local=True):
     logging.getLogger('').setLevel(logging.DEBUG if verbose else logging.INFO)
 
 
-if __name__ == '__main__':
+def main():
     # Parse command line flags.
     parser = argparse.ArgumentParser(description='Dolphin Central event '
                                      'dispatching server.')
@@ -88,3 +88,6 @@ if __name__ == '__main__':
     # Loop to wait for signals/exceptions.
     while True:
         time.sleep(1)
+
+if __name__ == '__main__':
+    main()
