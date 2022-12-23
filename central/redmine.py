@@ -12,9 +12,9 @@ class Reactor(events.EventTarget):
         return evt.type == events.RawRedmineHook.TYPE
 
     def push_event(self, evt):
-        if evt.rm_type not in ('opened', 'updated'):
+        if evt.rm_type not in ("opened", "updated"):
             pass  # Not handled yet.
-        new = (evt.rm_type == 'opened')
+        new = evt.rm_type == "opened"
         if new:
             update = 0
         else:
@@ -26,7 +26,8 @@ class Reactor(events.EventTarget):
         else:
             author = evt.raw.journal.author.login
         events.dispatcher.dispatch(
-            'redmine', events.Issue(new, update, issue, title, author))
+            "redmine", events.Issue(new, update, issue, title, author)
+        )
 
 
 def start():

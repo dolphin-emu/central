@@ -14,11 +14,10 @@ class RebootListener(events.EventTarget):
         return evt.type == events.IRCMessage.TYPE
 
     def push_event(self, evt):
-        if not evt.direct or not evt.what.endswith('reboot') or \
-                'o' not in evt.modes:
+        if not evt.direct or not evt.what.endswith("reboot") or "o" not in evt.modes:
             return
 
-        main_file = os.path.join(os.path.dirname(__file__), 'central.py')
+        main_file = os.path.join(os.path.dirname(__file__), "central.py")
         argv = [sys.executable, main_file] + sys.argv[1:]
         if os.fork():
             os._exit(0)
