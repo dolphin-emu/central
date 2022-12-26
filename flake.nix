@@ -13,7 +13,7 @@
         central = prev.poetry2nix.mkPoetryApplication {
           projectDir = ./.;
           overrides = prev.poetry2nix.defaultPoetryOverrides.extend (self: super: {
-            pypeul = super.pypeul.overridePythonAttrs (old: { buildInputs = (old.buildInputs or []) ++ [ super.setuptools ]; });
+            pypeul = super.pypeul.overridePythonAttrs (old: { buildInputs = (old.buildInputs or []) ++ [ super.poetry ]; });
           });
         };
       })
