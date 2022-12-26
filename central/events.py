@@ -12,7 +12,7 @@ class EventTarget:
         logging.error("push_event not redefined in EventTarget subclass")
 
     def accept_event(self, evt):
-        return True
+        return False
 
 
 class Dispatcher:
