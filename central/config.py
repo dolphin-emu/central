@@ -13,4 +13,4 @@ cfg = utils.ObjectLike({})
 
 def load(fp):
     """Loads the configuration from a file-like object."""
-    cfg.reset(yaml.load(fp))
+    cfg.reset(yaml.full_load(fp))
