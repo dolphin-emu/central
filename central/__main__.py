@@ -7,8 +7,10 @@ loop of the process.
 from . import admin, buildbot, config, events, github, ircclient, redmine, webserver
 
 import argparse
+import functools
 import logging
 import logging.handlers
+import signal
 import time
 
 
@@ -50,6 +52,14 @@ def setup_logging(program, verbose=False, local=True):
     logging.getLogger("").setLevel(logging.DEBUG if verbose else logging.INFO)
 
 
+def reload_config(path, *, sighup=False):
+    with open(path) as fp:
+        config.load(fp)
+    if sighup:
+        logging.info("SIGHUP received, reloaded config")
+        events.dispatcher.dispatch("sighup", events.ConfigReload())
+
+
 def main():
     # Parse command line flags.
     parser = argparse.ArgumentParser(
@@ -68,7 +78,6 @@ def main():
         "--config",
         help="Path to configuration file.",
         required=True,
-        type=argparse.FileType("r"),
     )
     args = parser.parse_args()
 
@@ -78,7 +87,10 @@ def main():
     logging.info("Starting Dolphin Central.")
 
     # Load configuration from disk.
-    config.load(args.config)
+    reload_config(args.config)
+    signal.signal(
+        signal.SIGHUP, lambda *a, **kw: reload_config(args.config, sighup=True)
+    )
 
     logging.info("Configuration loaded, starting modules initialization.")
 
