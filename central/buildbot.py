@@ -12,49 +12,38 @@ import os.path
 import queue
 import re
 import requests
-import uuid
 
 
-def make_netstring(s):
-    """Creates a netstring from a blob of bytes."""
-    return str(len(s)).encode("ascii") + b":" + s + b","
+def change_submission_url():
+    return cfg.buildbot.url + "change_hook"
 
 
-def make_build_request(repo, pr_id, job_id, baserev, headrev, who, comment):
-    """Creates a build request binary blob in the format expected by the
-    buildbot."""
-
-    request_dict = {
+def make_build_request(repo, pr_id, baserev, headrev, who, comment):
+    return {
         "branch": "refs/pull/%d/head" % pr_id,
-        "builderNames": cfg.buildbot.pr_builders,
-        "jobid": job_id,
-        "baserev": "",
-        "patch_level": 0,
-        "patch_body": None,
         "who": who,
-        "comment": comment,
-        "properties": {
-            "branchname": "pr-%d" % pr_id,
-            "baserev": baserev,
-            "headrev": headrev,
-            "shortrev": headrev[:6],
-            "pr_id": pr_id,
-            "repo": repo,
-        },
+        "revision": headrev,
+        "comments": comment,
+        "properties": json.dumps(
+            {
+                "branchname": "pr-%d" % pr_id,
+                "baserev": baserev,
+                "headrev": headrev,
+                "shortrev": headrev[:6],
+                "pr_id": pr_id,
+                "repo": repo,
+            }
+        ),
     }
-    encoded = json.dumps(request_dict, ensure_ascii=True).encode("ascii")
-    version = make_netstring(b"5")
-    return version + make_netstring(encoded)
 
 
 def send_build_request(build_request):
-    """Stores the build request (atomically) in the buildbot jobdir."""
-
-    path = os.path.join(cfg.buildbot.jobdir, "tmp", str(uuid.uuid4()))
-    open(path, "wb").write(build_request)
-    final_path = os.path.join(cfg.buildbot.jobdir, "new", str(uuid.uuid4()))
-    os.rename(path, final_path)
-    logging.info("Sent build request: %r", final_path)
+    """Stores the build request via the buildbot change hook API."""
+    requests.post(
+        change_submission_url(),
+        params=build_request,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
 
 
 class PullRequestBuilder:
@@ -145,7 +134,6 @@ class PullRequestBuilder:
             req = make_build_request(
                 repo,
                 pr_id,
-                "%d-%s" % (pr_id, head_sha[:6]),
                 base_sha,
                 head_sha,
                 "Central (on behalf of: %s)" % in_behalf_of,

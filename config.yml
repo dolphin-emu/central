@@ -37,7 +37,6 @@ github:
 
 buildbot:
     url: https://dolphin.ci/
-    jobdir: /home/buildbot/pr-jobdir
     # Builders for which a BuildStatus event is dispatched on completion
     pr_builders:
         - pr-android
