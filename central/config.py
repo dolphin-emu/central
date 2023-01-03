@@ -11,6 +11,14 @@ import yaml
 cfg = utils.ObjectLike({})
 
 
+def file_include_constructor(loader, node):
+    value = str(loader.construct_scalar(node))
+    with open(value) as fp:
+        return fp.read()
+
+
 def load(fp):
     """Loads the configuration from a file-like object."""
-    cfg.reset(yaml.full_load(fp))
+    loader = yaml.SafeLoader
+    loader.add_constructor("!FileInclude", file_include_constructor)
+    cfg.reset(yaml.load(fp, Loader=loader))
