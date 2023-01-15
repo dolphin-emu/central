@@ -94,6 +94,9 @@ class EventLogger(events.EventTarget):
         self.events = collections.deque(maxlen=25)
         self.per_type = collections.defaultdict(lambda: collections.deque(maxlen=25))
 
+    def accept_event(self, evt):
+        return True  # Log everything.
+
     def push_event(self, evt):
         ts = datetime.datetime.now()
         self.events.append((ts, evt))
