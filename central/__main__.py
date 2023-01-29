@@ -4,7 +4,17 @@ Initializes and registers the required components then starts the main event
 loop of the process.
 """
 
-from . import admin, buildbot, config, events, github, ircclient, redmine, webserver
+from . import (
+    admin,
+    buildbot,
+    config,
+    events,
+    git,
+    github,
+    ircclient,
+    redmine,
+    webserver,
+)
 
 import argparse
 import functools
@@ -95,7 +105,7 @@ def main():
     logging.info("Configuration loaded, starting modules initialization.")
 
     # Start the modules.
-    for mod in [admin, buildbot, github, ircclient, redmine, webserver]:
+    for mod in [admin, buildbot, git, github, ircclient, redmine, webserver]:
         mod.start()
 
     logging.info("Modules started, waiting for events.")

@@ -269,3 +269,17 @@ def RawBBHook(raw: dict):
 @event("raw_redmine_hook")
 def RawRedmineHook(rm_type: str, raw: dict):
     return {"rm_type": rm_type, "raw": raw}
+
+
+@event("new_dev_version")
+def NewDevVersion(
+    hash: str, branch: str, shortrev: str, author: str, message: str, url: str
+):
+    return {
+        "hash": hash,
+        "branch": branch,
+        "shortrev": shortrev,
+        "author": author,
+        "message": message,
+        "url": url,
+    }

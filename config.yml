@@ -12,6 +12,10 @@ web:
     bind: 127.0.0.1
     port: 8001
 
+git:
+    repos_path: /tmp/central-repos
+    git_path: /usr/bin/git
+
 github:
     account:
         login: dolphin-emu-bot
