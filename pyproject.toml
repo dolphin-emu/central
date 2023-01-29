@@ -17,6 +17,7 @@ pypeul = "^0.3.1"
 bottle = "^0.12.23"
 requests = "^2.28.1"
 pycryptodome = "^3.16.0"
+mwclient = "^0.10.1"
 
 
 [tool.poetry.group.dev.dependencies]
