@@ -41,7 +41,6 @@ class DaemonThread(threading.Thread):
     def run(self):
         while True:
             try:
-                print("Running %s" % self.daemon_target)
                 self.daemon_target(*self.args, **self.kwargs)
             except Exception:
                 logging.exception("Daemon thread %r failed", self)
