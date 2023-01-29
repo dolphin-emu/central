@@ -26,7 +26,7 @@ def basic_auth():
 
 
 def watched_repositories():
-    return cfg.github.maintain + cfg.github.notify
+    return (cfg.github.maintain or []) + (cfg.github.notify or [])
 
 
 def webhook_url():
