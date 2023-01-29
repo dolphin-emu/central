@@ -13,7 +13,7 @@
         central = prev.poetry2nix.mkPoetryApplication {
           projectDir = ./.;
           overrides = prev.poetry2nix.defaultPoetryOverrides.extend (self: super: {
-            pypeul = super.pypeul.overridePythonAttrs (old: { buildInputs = (old.buildInputs or []) ++ [ super.poetry ]; });
+            pypeul = super.pypeul.overridePythonAttrs (old: { buildInputs = (old.buildInputs or []) ++ [ super.poetry-core ]; });
           });
         };
       })
@@ -29,7 +29,7 @@
       defaultPackage = pkgs.central;
 
       devShells.default = with pkgs; mkShell {
-        buildInputs = [ python3Packages.poetry ];
+        buildInputs = [ poetry ];
       };
     }
   ));
