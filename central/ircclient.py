@@ -359,6 +359,10 @@ class EventTarget(events.EventTarget):
 
 def start():
     """Starts the IRC client."""
+    if not cfg.irc:
+        logging.warning("Skipping IRC module: no configuration provided")
+        return
+
     server = cfg.irc.server
     port = cfg.irc.port
     ssl = cfg.irc.ssl
