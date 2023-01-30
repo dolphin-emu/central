@@ -138,7 +138,7 @@ class RepoManager:
                 events.dispatcher.dispatch("repomanager", dev_ver_evt)
 
 
-class NewDevVersionListener(events.EventTarget):
+class PushListener(events.EventTarget):
     def __init__(self, repos):
         super().__init__()
         self.repos = repos
@@ -163,4 +163,4 @@ def start():
     for manager in repos.values():
         utils.DaemonThread(target=manager.run).start()
 
-    events.dispatcher.register_target(NewDevVersionListener(repos))
+    events.dispatcher.register_target(PushListener(repos))
