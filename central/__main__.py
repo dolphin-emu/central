@@ -14,6 +14,7 @@ from . import (
     ircclient,
     redmine,
     webserver,
+    wiki,
 )
 
 import argparse
@@ -105,7 +106,7 @@ def main():
     logging.info("Configuration loaded, starting modules initialization.")
 
     # Start the modules.
-    for mod in [admin, buildbot, git, github, ircclient, redmine, webserver]:
+    for mod in [admin, buildbot, git, github, ircclient, redmine, webserver, wiki]:
         mod.start()
 
     logging.info("Modules started, waiting for events.")

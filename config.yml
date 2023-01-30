@@ -61,3 +61,10 @@ buildbot:
 
 fifoci:
     url: https://fifoci.ci/
+
+wiki:
+    host: wiki.dolphin-emu.org
+    path: /
+    username: BuildBot
+    password: SECRET
+    latest_dev_page: Template:CurrentGitRevision
