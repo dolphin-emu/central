@@ -14,7 +14,7 @@ class WikiUpdater:
         self.host = settings.host
         self.path = settings.path
         self.username = settings.username
-        self.password = settings.password
+        self.password = settings.password.strip()
         self.latest_dev_page = settings.latest_dev_page
 
         self.queue = queue.Queue()
