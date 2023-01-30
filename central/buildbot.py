@@ -18,7 +18,7 @@ def change_submission_url():
     return cfg.buildbot.url + "change_hook"
 
 
-def make_build_request(repo, pr_id, baserev, headrev, who, comment):
+def make_pr_build_request(repo, pr_id, baserev, headrev, who, comment):
     return {
         "branch": "refs/pull/%d/head" % pr_id,
         "who": who,
@@ -32,6 +32,23 @@ def make_build_request(repo, pr_id, baserev, headrev, who, comment):
                 "shortrev": headrev[:6],
                 "pr_id": pr_id,
                 "repo": repo,
+            }
+        ),
+    }
+
+
+def make_dev_build_request(branch, rev, shortrev, who, comment):
+    return {
+        "branch": branch,
+        "who": who,
+        "revision": rev,
+        "comments": comment,
+        "properties": json.dumps(
+            {
+                "branchname": branch,
+                "shortrev": shortrev,
+                "author": who,
+                "description": comment,
             }
         ),
     }
@@ -131,7 +148,7 @@ class PullRequestBuilder:
                 )
                 events.dispatcher.dispatch("prbuilder", status_evt)
 
-            req = make_build_request(
+            req = make_pr_build_request(
                 repo,
                 pr_id,
                 base_sha,
@@ -269,6 +286,20 @@ class BBHookListener(events.EventTarget):
         self.collector.push(evt.raw)
 
 
+class NewDevVersionListener(events.EventTarget):
+    def __init__(self):
+        super().__init__()
+
+    def accept_event(self, evt):
+        return evt.type == events.NewDevVersion.TYPE
+
+    def push_event(self, evt):
+        req = make_dev_build_request(
+            evt.branch, evt.hash, evt.shortrev, evt.author, evt.message
+        )
+        send_build_request(req)
+
+
 def start():
     """Starts all the Buildbot related services."""
 
@@ -281,3 +312,5 @@ def start():
     collector = BuildStatusCollector()
     events.dispatcher.register_target(BBHookListener(collector))
     utils.DaemonThread(target=collector.run).start()
+
+    events.dispatcher.register_target(NewDevVersionListener())
