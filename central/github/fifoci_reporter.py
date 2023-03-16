@@ -2,6 +2,7 @@ from .. import events, github
 from ..config import cfg
 
 import requests
+import textwrap
 
 
 class GHFifoCIEditer(events.EventTarget):
