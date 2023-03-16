@@ -33,12 +33,6 @@ def webhook_url():
     return cfg.web.external_url + "/gh/hook/"
 
 
-def user_from_oauth(token):
-    return requests.get(
-        "https://api.github.com/user", headers={"Authorization": "token " + token}
-    ).json()
-
-
 def get_pull_request(owner, repo, pr_id):
     return requests.get(
         "https://api.github.com/repos/%s/%s/pulls/%s" % (owner, repo, pr_id)
@@ -71,33 +65,6 @@ def post_comment(owner, repo, pr_id, body):
         data=json.dumps({"body": body}),
         headers={"Content-Type": "application/json"},
         auth=basic_auth(),
-    )
-
-
-def is_pull_request_buildable(pr):
-    statuses = requests.get(pr["_links"]["statuses"]["href"]).json()
-    if not statuses:
-        return False
-    st = list(sorted((s["id"], s["state"]) for s in statuses))[-1]
-    return st[1] == "success"
-
-
-def is_pull_request_self_mergeable(pr):
-    comments = get_pull_request_comments(pr)
-    comments = [c for c in comments if c["user"]["login"] in CORE_USERS]
-    allowed = False
-    for c in comments:
-        if cfg.github.allow_self_merge_command in c["body"]:
-            allowed = True
-        if cfg.github.disallow_self_merge_command in c["body"]:
-            allowed = False
-    return allowed
-
-
-def merge_pr(pr):
-    merge_url = pr["_links"]["self"]["href"] + "/merge"
-    requests.put(
-        merge_url, data=json.dumps({"commit_message": pr["title"]}), auth=basic_auth()
     )
 
 
@@ -381,30 +348,6 @@ class GHPRStatusUpdater(events.EventTarget):
         )
 
 
-class GHAllowMergeEditer(events.EventTarget):
-    def accept_event(self, evt):
-        return evt.type == events.GHIssueComment.TYPE
-
-    def push_event(self, evt):
-        if evt.author not in CORE_USERS:
-            return
-        if cfg.github.allow_self_merge_command not in evt.body:
-            return
-        pr_author = evt.raw.issue.user.login
-        merge_url = cfg.web.external_url + "/gh/merge/%s/%s/" % (evt.repo, evt.id)
-        new_body = (
-            "@%s: This comment grants you the permission to merge "
-            "this pull request whenever you think it is ready. "
-            "After addressing the remaining comments, click "
-            "[this link to merge](%s).\n\n---\n\n"
-        )
-        new_body %= (pr_author, merge_url)
-        new_body += evt.body
-        requests.patch(
-            evt.raw.comment.url, data=json.dumps({"body": new_body}), auth=basic_auth()
-        )
-
-
 class GHFifoCIEditer(events.EventTarget):
     MAGIC_WORDS = "automated-fifoci-reporter"
 
@@ -459,7 +402,6 @@ def start():
 
     events.dispatcher.register_target(GHHookEventParser())
     events.dispatcher.register_target(GHPRStatusUpdater())
-    events.dispatcher.register_target(GHAllowMergeEditer())
     events.dispatcher.register_target(GHFifoCIEditer())
 
     utils.spawn_periodic_task(600, periodic_hook_maintainer)
