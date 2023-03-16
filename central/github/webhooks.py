@@ -1,14 +1,8 @@
-"""GitHub module that handles most interactions with GitHub. It handles
-incoming events but also provides an API."""
-
-from . import events, utils
-from .config import cfg
+from .. import events, github, utils
+from ..config import cfg
 
 import json
 import logging
-import textwrap
-import time
-
 import requests
 
 GH_WEBHOOK_EVENTS = [
@@ -21,10 +15,6 @@ GH_WEBHOOK_EVENTS = [
 ]
 
 
-def basic_auth():
-    return (cfg.github.account.token, "x-oauth-basic")
-
-
 def watched_repositories():
     return (cfg.github.maintain or []) + (cfg.github.notify or [])
 
@@ -33,105 +23,13 @@ def webhook_url():
     return cfg.web.external_url + "/gh/hook/"
 
 
-def get_pull_request(owner, repo, pr_id):
-    return requests.get(
-        "https://api.github.com/repos/%s/%s/pulls/%s" % (owner, repo, pr_id)
-    ).json()
-
-
-def get_pull_request_comments(pr):
-    comments = []
-    url = pr["_links"]["comments"]["href"]
-    while True:
-        r = requests.get(url)
-        comments.extend(r.json())
-        if "link" in r.headers and "next" in r.links:
-            url = r.links["next"]["url"]
-        else:
-            break
-    return comments
-
-
-def delete_comment(owner, repo, cmt_id):
-    requests.delete(
-        "https://api.github.com/repos/%s/%s/issues/comments/%d" % (owner, repo, cmt_id),
-        auth=basic_auth(),
-    )
-
-
-def post_comment(owner, repo, pr_id, body):
-    requests.post(
-        "https://api.github.com/repos/%s/%s/issues/%s/comments" % (owner, repo, pr_id),
-        data=json.dumps({"body": body}),
-        headers={"Content-Type": "application/json"},
-        auth=basic_auth(),
-    )
-
-
-def get_pr_review_comments(owner_and_repo, pr_id, review_id):
-    json = requests.get(
-        "https://api.github.com/repos/%s/pulls/%d/reviews/%d/comments"
-        % (owner_and_repo, pr_id, review_id),
-        headers={
-            "Content-Type": "application/json",
-            # This API is currently in preview so we need to specify this,
-            # but it will continue to work after the preview period ends.
-            "Accept": "application/vnd.github.black-cat-preview+json",
-        },
-        auth=basic_auth(),
-    ).json()
-    return [utils.ObjectLike(c) for c in json]
-
-
-def request_get_all(url):
-    """Github uses Link header for pagination, this loops through all pages."""
-    data = []
-    r = requests.get(url, auth=basic_auth())
-    data += r.json()
-    while "next" in r.links:
-        r = requests.get(r.links["next"]["url"], auth=basic_auth())
-        data += r.json()
-    return data
-
-
-TRUSTED_USERS = set()
-CORE_USERS = set()
-
-
-def sync_github_group(group, group_name):
-    """Synchronizes the list of trusted users by querying a given group."""
-    org = group_name.split("/")[0]
-    team = group_name.split("/")[1]
-    logging.info("Refreshing list of trusted users (from %s/%s)", org, team)
-
-    team_info = request_get_all(
-        "https://api.github.com/orgs/%s/teams/%s/members" % (org, team)
-    )
-    group.clear()
-    for member in team_info:
-        group.add(member["login"])
-    logging.info("New GH %s: %s", group_name, ",".join(group))
-
-
-def sync_trusted_users():
-    sync_github_group(TRUSTED_USERS, cfg.github.trusted_users.group)
-
-
-def sync_core_users():
-    sync_github_group(CORE_USERS, cfg.github.core_users.group)
-
-
-def is_safe_author(login):
-    return login in TRUSTED_USERS
-
-
 def periodic_hook_maintainer():
     """Function that checks watched repositories for presence of a webhook that
     points to us. If not present, installs the hook."""
 
     logging.info("Checking watched repositories for webhook presence")
     for repo in watched_repositories():
-        hs = request_get_all("https://api.github.com/repos/%s/hooks" % repo)
+        hs = github.request_get_all("https://api.github.com/repos/%s/hooks" % repo)
         hook_present = False
         for h in hs:
             if "config" not in h:
@@ -169,7 +67,7 @@ def periodic_hook_maintainer():
             url,
             headers={"Content-Type": "application/json"},
             data=json.dumps(hook_data),
-            auth=basic_auth(),
+            auth=github.basic_auth(),
         )
 
 
@@ -236,7 +134,7 @@ class GHHookEventParser(events.EventTarget):
             base_sha,
             head_sha,
             raw.pull_request.html_url,
-            is_safe_author(author),
+            github.authz.is_safe_author(author),
             raw.pull_request.merged,
             raw.pull_request.requested_reviewers,
         )
@@ -244,7 +142,7 @@ class GHHookEventParser(events.EventTarget):
     def convert_pull_request_review(self, raw):
         repo = raw.repository.owner.login + "/" + raw.repository.name
         pr_id = raw.pull_request.number
-        comments = get_pr_review_comments(repo, pr_id, raw.review.id)
+        comments = github.get_pr_review_comments(repo, pr_id, raw.review.id)
         return events.GHPullRequestReview(
             repo,
             raw.sender.login,
@@ -288,7 +186,7 @@ class GHHookEventParser(events.EventTarget):
             id,
             raw.issue.title,
             raw.comment.html_url,
-            is_safe_author(author),
+            github.authz.is_safe_author(author),
             raw.comment.body,
             raw,
         )
@@ -318,94 +216,7 @@ class GHHookEventParser(events.EventTarget):
         events.dispatcher.dispatch("ghhookparser", obj)
 
 
-class GHPRStatusUpdater(events.EventTarget):
-    def accept_event(self, evt):
-        return evt.type == events.BuildStatus.TYPE
-
-    def push_event(self, evt):
-        if evt.pr is None:
-            return
-
-        if evt.pending:
-            state = "pending"
-        elif evt.success:
-            state = "success"
-        else:
-            state = "failure"
-
-        url = "https://api.github.com/repos/" + evt.repo + "/statuses/" + evt.hash
-        data = {
-            "state": state,
-            "target_url": evt.url,
-            "description": evt.description,
-            "context": evt.service,
-        }
-        requests.post(
-            url,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(data),
-            auth=basic_auth(),
-        )
-
-
-class GHFifoCIEditer(events.EventTarget):
-    MAGIC_WORDS = "automated-fifoci-reporter"
-
-    def accept_event(self, evt):
-        return evt.type == events.PullRequestFifoCIStatus.TYPE
-
-    def push_event(self, evt):
-        # Get FifoCI side status
-        url = cfg.fifoci.url + "/version/%s/json/" % evt.hash
-        diff_data = requests.get(url).json()
-        owner, repo = evt.repo.split("/")
-        pr = get_pull_request(owner, repo, evt.pr)
-        comments = get_pull_request_comments(pr)
-        comments = [
-            c for c in comments if c["user"]["login"] == cfg.github.account.login
-        ]
-
-        body = textwrap.dedent(
-            """\
-            [FifoCI](%s/about/) detected that this change impacts graphical \
-            rendering. Here are the [behavior differences](%s/version/%s/) \
-            detected by the system:
-
-        """
-            % (cfg.fifoci.url, cfg.fifoci.url, evt.hash)
-        )
-        for diff in diff_data:
-            l = "* `%s` on `%s`: " % (diff["dff"], diff["type"])
-            if diff["failure"]:
-                l += "[failed to render]"
-            else:
-                l += "[diff]"
-            l += "(%s%s)" % (cfg.fifoci.url, diff["url"])
-            body += l + "\n"
-        body += "\n<sub><sup>" + self.MAGIC_WORDS + "</sup></sub>"
-
-        if comments and comments[-1]["body"] == body:
-            return
-
-        for c in comments:
-            if self.MAGIC_WORDS in c["body"]:
-                delete_comment(owner, repo, c["id"])
-
-        if not diff_data:
-            return
-
-        post_comment(owner, repo, evt.pr, body)
-
-
 def start():
-    """Starts all the GitHub related services."""
-
     events.dispatcher.register_target(GHHookEventParser())
-    events.dispatcher.register_target(GHPRStatusUpdater())
-    events.dispatcher.register_target(GHFifoCIEditer())
 
     utils.spawn_periodic_task(600, periodic_hook_maintainer)
-    utils.spawn_periodic_task(
-        cfg.github.trusted_users.refresh_interval, sync_trusted_users
-    )
-    utils.spawn_periodic_task(cfg.github.core_users.refresh_interval, sync_core_users)
