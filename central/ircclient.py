@@ -216,7 +216,7 @@ class EventTarget(events.EventTarget):
             action = "synchronized"
         elif action == "review_requested":
             action = "requested a review from %s for" % ", ".join(
-                [user.login for user in evt.requested_reviewers]
+                [user["login"] for user in evt.requested_reviewers]
             )
         elif action == "review_request_removed":
             action = "dismissed a review request on"
