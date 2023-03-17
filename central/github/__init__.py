@@ -75,5 +75,5 @@ def request_get_all(url):
 def start():
     """Starts all the GitHub related services."""
 
-    for mod in [build_status, fifoci_reporter, webhooks]:
+    for mod in [authz, build_status, fifoci_reporter, webhooks]:
         mod.start()
