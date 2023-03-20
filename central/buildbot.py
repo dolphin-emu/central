@@ -67,12 +67,12 @@ class PullRequestBuilder:
     def __init__(self):
         self.queue = queue.Queue()
 
-    def push(self, in_behalf_of, trusted, repo, pr_id):
-        self.queue.put((in_behalf_of, trusted, repo, pr_id))
+    def push(self, on_behalf_of, trusted, repo, pr_id):
+        self.queue.put((on_behalf_of, trusted, repo, pr_id))
 
     def run(self):
         while True:
-            in_behalf_of, trusted, repo, pr_id = self.queue.get()
+            on_behalf_of, trusted, repo, pr_id = self.queue.get()
 
             # To check if a PR is mergeable, we need to request it directly.
             pr = requests.get(
@@ -100,7 +100,7 @@ class PullRequestBuilder:
                     False,
                     False,
                     "",
-                    "PR not built because %s is not auto-trusted." % in_behalf_of,
+                    "PR not built because %s is not auto-trusted." % on_behalf_of,
                 )
                 events.dispatcher.dispatch("prbuilder", status_evt)
                 continue
@@ -153,7 +153,7 @@ class PullRequestBuilder:
                 pr_id,
                 base_sha,
                 head_sha,
-                "Central (on behalf of: %s)" % in_behalf_of,
+                "Central (on behalf of: %s)" % on_behalf_of,
                 "Auto build for PR #%d (%s)." % (pr_id, head_sha),
             )
             send_build_request(req)
