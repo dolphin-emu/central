@@ -300,7 +300,7 @@ class EventTarget(events.EventTarget):
         )
 
     def handle_gh_issue_comment(self, evt):
-        if evt.author == cfg.github.account.login:
+        if evt.author == cfg.github.app.username:
             return
         if evt.action == "created":
             action = "commented on"

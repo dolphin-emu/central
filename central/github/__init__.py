@@ -1,14 +1,10 @@
-from . import authz, build_status, fifoci_reporter, webhooks
+from . import app, authz, build_status, fifoci_reporter, webhooks
 
 from .. import utils
 from ..config import cfg
 
 import json
 import requests
-
-
-def basic_auth():
-    return (cfg.github.account.token, "x-oauth-basic")
 
 
 def get_pull_request(owner, repo, pr_id):
@@ -33,7 +29,7 @@ def get_pull_request_comments(pr):
 def delete_comment(owner, repo, cmt_id):
     requests.delete(
         "https://api.github.com/repos/%s/%s/issues/comments/%d" % (owner, repo, cmt_id),
-        auth=basic_auth(),
+        auth=app.OrgAuth(owner),
     )
 
 
@@ -42,11 +38,11 @@ def post_comment(owner, repo, pr_id, body):
         "https://api.github.com/repos/%s/%s/issues/%s/comments" % (owner, repo, pr_id),
         data=json.dumps({"body": body}),
         headers={"Content-Type": "application/json"},
-        auth=basic_auth(),
+        auth=app.OrgAuth(owner),
     )
 
 
-def get_pr_review_comments(owner_and_repo, pr_id, review_id):
+def get_pr_review_comments(owner, repo, pr_id, review_id):
     json = requests.get(
         "https://api.github.com/repos/%s/pulls/%d/reviews/%d/comments"
         % (owner_and_repo, pr_id, review_id),
@@ -56,24 +52,28 @@ def get_pr_review_comments(owner_and_repo, pr_id, review_id):
             # but it will continue to work after the preview period ends.
             "Accept": "application/vnd.github.black-cat-preview+json",
         },
-        auth=basic_auth(),
+        auth=app.OrgAuth(owner),
     ).json()
     return [utils.ObjectLike(c) for c in json]
 
 
-def request_get_all(url):
+def request_get_all(url, **kwargs):
     """Github uses Link header for pagination, this loops through all pages."""
     data = []
-    r = requests.get(url, auth=basic_auth())
+    r = requests.get(url, **kwargs)
     data += r.json()
     while "next" in r.links:
-        r = requests.get(r.links["next"]["url"], auth=basic_auth())
+        r = requests.get(r.links["next"]["url"], **kwargs)
         data += r.json()
     return data
 
 
 def start():
     """Starts all the GitHub related services."""
+
+    # Start first to ensure app-based authorization is available to all other
+    # modules.
+    app.start()
 
     for mod in [authz, build_status, fifoci_reporter, webhooks]:
         mod.start()

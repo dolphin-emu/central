@@ -1,4 +1,5 @@
-from .. import events, github
+from . import app
+from .. import events
 
 import json
 import requests
@@ -30,7 +31,7 @@ class GHPRStatusUpdater(events.EventTarget):
             url,
             headers={"Content-Type": "application/json"},
             data=json.dumps(data),
-            auth=github.basic_auth(),
+            auth=app.OrgAuth(evt.repo.split("/")[0]),
         )
 
 

@@ -1,3 +1,5 @@
+from . import app
+
 from .. import github, utils
 from ..config import cfg
 
@@ -19,7 +21,8 @@ def sync_github_group(group, group_name):
     logging.info("Refreshing list of trusted users (from %s/%s)", org, team)
 
     team_info = github.request_get_all(
-        "https://api.github.com/orgs/%s/teams/%s/members" % (org, team)
+        "https://api.github.com/orgs/%s/teams/%s/members" % (org, team),
+        auth=app.OrgAuth(org),
     )
     group.clear()
     for member in team_info:

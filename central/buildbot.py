@@ -134,7 +134,7 @@ class PullRequestBuilder:
             )
             events.dispatcher.dispatch("prbuilder", status_evt)
 
-            for builder in (cfg.buildbot.pr_builders or []):
+            for builder in cfg.buildbot.pr_builders or []:
                 status_evt = events.BuildStatus(
                     repo,
                     head_sha,

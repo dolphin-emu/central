@@ -1,75 +1,11 @@
 from .. import events, github, utils
 from ..config import cfg
 
-import json
 import logging
-import requests
-
-GH_WEBHOOK_EVENTS = [
-    "check_run",
-    "commit_comment",
-    "issue_comment",
-    "pull_request",
-    "pull_request_review",
-    "pull_request_review_comment",
-    "push",
-]
 
 
 def watched_repositories():
     return (cfg.github.maintain or []) + (cfg.github.notify or [])
-
-
-def webhook_url():
-    return cfg.web.external_url + "/gh/hook/"
-
-
-def periodic_hook_maintainer():
-    """Function that checks watched repositories for presence of a webhook that
-    points to us. If not present, installs the hook."""
-
-    logging.info("Checking watched repositories for webhook presence")
-    for repo in watched_repositories():
-        hs = github.request_get_all("https://api.github.com/repos/%s/hooks" % repo)
-        hook_present = False
-        for h in hs:
-            if "config" not in h:
-                continue
-            config = h["config"]
-            if "url" not in config:
-                continue
-            if config["url"] != webhook_url():
-                continue
-            hook_present = True
-            break
-
-        hook_data = {
-            "name": "web",
-            "active": True,
-            "events": GH_WEBHOOK_EVENTS,
-            "config": {
-                "url": webhook_url(),
-                "content_type": "json",
-                "secret": cfg.github.hook_hmac_secret,
-                "insecure_ssl": "0",
-            },
-        }
-
-        if hook_present:
-            logging.info("Watched repo %r has our hook installed" % repo)
-            url = h["url"]
-            method = requests.patch
-        else:
-            logging.warning("Repo %r is missing our hook, installing" % repo)
-            url = "https://api.github.com/repos/%s/hooks" % repo
-            method = requests.post
-
-        method(
-            url,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(hook_data),
-            auth=github.basic_auth(),
-        )
 
 
 class GHHookEventParser(events.EventTarget):
@@ -143,7 +79,9 @@ class GHHookEventParser(events.EventTarget):
     def convert_pull_request_review(self, raw):
         repo = raw.repository.owner.login + "/" + raw.repository.name
         pr_id = raw.pull_request.number
-        comments = github.get_pr_review_comments(repo, pr_id, raw.review.id)
+        comments = github.get_pr_review_comments(
+            raw.repository.owner.login, raw.repository.name, pr_id, raw.review.id
+        )
         return events.GHPullRequestReview(
             repo,
             raw.sender.login,
@@ -199,6 +137,12 @@ class GHHookEventParser(events.EventTarget):
         )
 
     def push_event(self, evt):
+        if evt.raw.repository is not None:
+            repo = evt.raw.repository.owner.login + "/" + evt.raw.repository.name
+            if repo not in watched_repositories():
+                logging.debug("Skipping webhook event for unwatched repo %s", repo)
+                return
+
         if evt.gh_type == "push":
             obj = self.convert_push_event(evt.raw)
         elif evt.gh_type == "pull_request":
@@ -214,10 +158,9 @@ class GHHookEventParser(events.EventTarget):
         else:
             logging.error("Unhandled event type %r in GH parser" % evt.gh_type)
             return
+
         events.dispatcher.dispatch("ghhookparser", obj)
 
 
 def start():
     events.dispatcher.register_target(GHHookEventParser())
-
-    utils.spawn_periodic_task(600, periodic_hook_maintainer)

@@ -19,7 +19,7 @@ class GHFifoCIEditer(events.EventTarget):
         pr = github.get_pull_request(owner, repo, evt.pr)
         comments = github.get_pull_request_comments(pr)
         comments = [
-            c for c in comments if c["user"]["login"] == cfg.github.account.login
+            c for c in comments if c["user"]["login"] == cfg.github.app.username
         ]
 
         body = textwrap.dedent(

@@ -17,9 +17,10 @@ git:
     git_path: /usr/bin/git
 
 github:
-    account:
-        login: dolphin-emu-bot
-        token: TOKEN
+    app:
+      id: 1234
+      priv_key_path: /path/to/key.pem
+      username: dolphin-ci
     maintain:
         - dolphin-emu/dolphin
     notify:
@@ -32,9 +33,6 @@ github:
         group: dolphin-emu/core-developers
         refresh_interval: 600
     hook_hmac_secret: SECRET
-    oauth:
-        client_id: CLIENT_ID
-        client_secret: CLIENT_SECRET
     rebuild_command: "@dolphin-emu-bot rebuild"
 
 buildbot:
