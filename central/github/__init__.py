@@ -44,8 +44,8 @@ def post_comment(owner, repo, pr_id, body):
 
 def get_pr_review_comments(owner, repo, pr_id, review_id):
     json = requests.get(
-        "https://api.github.com/repos/%s/pulls/%d/reviews/%d/comments"
-        % (owner_and_repo, pr_id, review_id),
+        "https://api.github.com/repos/%s/%s/pulls/%d/reviews/%d/comments"
+        % (owner, repo, pr_id, review_id),
         headers={
             "Content-Type": "application/json",
             # This API is currently in preview so we need to specify this,
