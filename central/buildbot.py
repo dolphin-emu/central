@@ -60,6 +60,7 @@ def send_build_request(build_request):
         change_submission_url(),
         params=build_request,
         headers={"Content-Type": "application/x-www-form-urlencoded"},
+        auth=(cfg.buildbot.change_hook_username.strip(), cfg.buildbot.change_hook_password.strip()),
     )
 
 

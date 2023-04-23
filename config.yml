@@ -37,6 +37,8 @@ github:
 
 buildbot:
     url: https://dolphin.ci/
+    change_hook_username: SECRET
+    change_hook_password: SECRET
     # Builders for which a BuildStatus event is dispatched on completion
     pr_builders:
         - pr-android
