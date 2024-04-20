@@ -54,6 +54,25 @@ def make_dev_build_request(branch, rev, shortrev, who, comment):
     }
 
 
+def make_release_build_request(tag, rev, who):
+    comment = "Release %s" % tag
+
+    return {
+        "branch": "refs/tags/%s" % tag,
+        "who": who,
+        "revision": rev,
+        "comments": comment,
+        "properties": json.dumps(
+            {
+                "branchname": "releases",
+                "shortrev": tag,
+                "author": who,
+                "description": comment,
+            }
+        ),
+    }
+
+
 def send_build_request(build_request):
     """Stores the build request via the buildbot change hook API."""
     requests.post(
@@ -304,6 +323,18 @@ class NewDevVersionListener(events.EventTarget):
         send_build_request(req)
 
 
+class NewReleaseVersionListener(events.EventTarget):
+    def __init__(self):
+        super().__init__()
+
+    def accept_event(self, evt):
+        return evt.type == events.NewReleaseVersion.TYPE
+
+    def push_event(self, evt):
+        req = make_release_build_request(evt.tag, evt.hash, evt.author)
+        send_build_request(req)
+
+
 def start():
     """Starts all the Buildbot related services."""
 
@@ -318,3 +349,4 @@ def start():
     utils.DaemonThread(target=collector.run).start()
 
     events.dispatcher.register_target(NewDevVersionListener())
+    events.dispatcher.register_target(NewReleaseVersionListener())
