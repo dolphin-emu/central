@@ -283,3 +283,12 @@ def NewDevVersion(
         "message": message,
         "url": url,
     }
+
+
+@event("new_release_version")
+def NewReleaseVersion(hash: str, tag: str, author: str):
+    return {
+        "hash": hash,
+        "tag": tag,
+        "author": author,
+    }
