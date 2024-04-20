@@ -98,44 +98,57 @@ class RepoManager:
 
             self.repo.fetch()
 
-            commits = [utils.ObjectLike(c) for c in evt.commits]
-            distinct_commits = [c for c in commits if c.distinct and c.message.strip()]
-            logging.info(
-                "[%s] push received with %d commits",
-                self.repo_name,
-                len(distinct_commits),
-            )
-
-            for commit in distinct_commits:
-                branch = self.determine_branch(commit)
-                if branch is None:
-                    logging.info(
-                        "[%s] skipping commit %s, not on a named branch",
-                        self.repo_name,
-                        commit.hash,
-                    )
-                    continue
-
-                desc = self.repo.git_cli("describe", "--always", "--long", commit.hash)
-                shortrev = desc.rsplit("-", 1)[0]
-
-                author = self.repo.commit_log(commit.hash, "%an")
-                comment = self.repo.commit_log(commit.hash, "%s\n\n%b")
-                url = f"https://github.com/{self.repo_name}/commit/{commit.hash}"
+            if evt.ref_type == "tags" and evt.created:
+                commit_hash = self.repo.commit_log("refs/tags/%s" % evt.ref_name, "%H")
 
                 logging.info(
-                    "[%s] commit %s: (%s) %s from %s",
+                    "[%s] tag %s created by %s",
                     self.repo_name,
-                    commit.hash[:8],
-                    branch,
-                    shortrev,
-                    author,
+                    evt.ref_name,
+                    evt.pusher,
                 )
 
-                dev_ver_evt = events.NewDevVersion(
-                    commit.hash, branch, shortrev, author, comment, url
+                release_ver_evt = events.NewReleaseVersion(commit_hash, evt.ref_name, evt.pusher)
+                events.dispatcher.dispatch("repomanager", release_ver_evt)
+            else:
+                commits = [utils.ObjectLike(c) for c in evt.commits]
+                distinct_commits = [c for c in commits if c.distinct and c.message.strip()]
+                logging.info(
+                    "[%s] push received with %d commits",
+                    self.repo_name,
+                    len(distinct_commits),
                 )
-                events.dispatcher.dispatch("repomanager", dev_ver_evt)
+
+                for commit in distinct_commits:
+                    branch = self.determine_branch(commit)
+                    if branch is None:
+                        logging.info(
+                            "[%s] skipping commit %s, not on a named branch",
+                            self.repo_name,
+                            commit.hash,
+                        )
+                        continue
+
+                    desc = self.repo.git_cli("describe", "--always", "--long", commit.hash)
+                    shortrev = desc.rsplit("-", 1)[0]
+
+                    author = self.repo.commit_log(commit.hash, "%an")
+                    comment = self.repo.commit_log(commit.hash, "%s\n\n%b")
+                    url = f"https://github.com/{self.repo_name}/commit/{commit.hash}"
+
+                    logging.info(
+                        "[%s] commit %s: (%s) %s from %s",
+                        self.repo_name,
+                        commit.hash[:8],
+                        branch,
+                        shortrev,
+                        author,
+                    )
+
+                    dev_ver_evt = events.NewDevVersion(
+                        commit.hash, branch, shortrev, author, comment, url
+                    )
+                    events.dispatcher.dispatch("repomanager", dev_ver_evt)
 
 
 class PushListener(events.EventTarget):
