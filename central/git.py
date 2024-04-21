@@ -108,11 +108,15 @@ class RepoManager:
                     evt.pusher,
                 )
 
-                release_ver_evt = events.NewReleaseVersion(commit_hash, evt.ref_name, evt.pusher)
+                release_ver_evt = events.NewReleaseVersion(
+                    commit_hash, evt.ref_name, evt.pusher
+                )
                 events.dispatcher.dispatch("repomanager", release_ver_evt)
             else:
                 commits = [utils.ObjectLike(c) for c in evt.commits]
-                distinct_commits = [c for c in commits if c.distinct and c.message.strip()]
+                distinct_commits = [
+                    c for c in commits if c.distinct and c.message.strip()
+                ]
                 logging.info(
                     "[%s] push received with %d commits",
                     self.repo_name,
@@ -129,7 +133,9 @@ class RepoManager:
                         )
                         continue
 
-                    desc = self.repo.git_cli("describe", "--always", "--long", commit.hash)
+                    desc = self.repo.git_cli(
+                        "describe", "--always", "--long", commit.hash
+                    )
                     shortrev = desc.rsplit("-", 1)[0]
 
                     author = self.repo.commit_log(commit.hash, "%an")
