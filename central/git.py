@@ -49,7 +49,7 @@ class GitRepository:
         self.git_cli("clone", "--bare", "--filter=tree:0", origin, ".")
 
     def fetch(self):
-        self.git_cli("fetch", "--prune", "--tags", "origin", "*:*")
+        self.git_cli("fetch", "--all", "--tags", "--prune")
         self.git_cli("update-ref", "HEAD", "FETCH_HEAD")
 
     def commit_log(self, hash, format):
