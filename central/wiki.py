@@ -31,6 +31,9 @@ class WikiUpdater:
         while True:
             evt = self.queue.get()
 
+            if evt.branch != "master":
+                continue
+
             page = site.pages[self.latest_dev_page]
             page.edit(evt.shortrev, "Automatic update of the current git revision")
 
