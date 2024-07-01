@@ -51,6 +51,7 @@ class GitRepository:
     def fetch(self):
         self.git_cli("fetch", "--all", "--tags", "--prune")
         self.git_cli("update-ref", "HEAD", "FETCH_HEAD")
+        self.git_cli("fetch", "origin", "refs/heads/*:refs/heads/*")
 
     def commit_log(self, hash, format):
         return self.git_cli("log", "-1", f"--format=format:{format}", hash)
