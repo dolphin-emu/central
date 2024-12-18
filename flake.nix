@@ -8,6 +8,15 @@
 
   outputs = { self, nixpkgs, flake-utils, poetry2nix }: {
     overlay = nixpkgs.lib.composeManyExtensions [
+      poetry2nix.overlays.default
+      (final: prev: {
+        central = prev.poetry2nix.mkPoetryApplication {
+          projectDir = ./.;
+          overrides = prev.poetry2nix.defaultPoetryOverrides.extend (self: super: {
+            pypeul = super.pypeul.overridePythonAttrs (old: { buildInputs = (old.buildInputs or []) ++ [ super.poetry-core ]; });
+          });
+        };
+      })
       # Manually override wheel package to 0.45.1 until the change lands in nixos-24.11
       # https://github.com/NixOS/nixpkgs/pull/361930
       (self: super: rec {
@@ -22,15 +31,6 @@
               };
             });
           };
-        };
-      })
-      poetry2nix.overlays.default
-      (final: prev: {
-        central = prev.poetry2nix.mkPoetryApplication {
-          projectDir = ./.;
-          overrides = prev.poetry2nix.defaultPoetryOverrides.extend (self: super: {
-            pypeul = super.pypeul.overridePythonAttrs (old: { buildInputs = (old.buildInputs or []) ++ [ super.poetry-core ]; });
-          });
         };
       })
     ];
