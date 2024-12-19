@@ -14,23 +14,17 @@
           projectDir = ./.;
           overrides = prev.poetry2nix.defaultPoetryOverrides.extend (self: super: {
             pypeul = super.pypeul.overridePythonAttrs (old: { buildInputs = (old.buildInputs or []) ++ [ super.poetry-core ]; });
-          });
-        };
-      })
-      # Manually override wheel package to 0.45.1 until the change lands in nixos-24.11
-      # https://github.com/NixOS/nixpkgs/pull/361930
-      (self: super: rec {
-        python3 = super.python3.override {
-          packageOverrides = python-self: python-super: {
-            wheel = python-super.wheel.overridePythonAttrs (oldAttrs: rec {
+            # Manually override wheel package to 0.45.1 until the change lands in nixos-24.11
+            # https://github.com/NixOS/nixpkgs/pull/361930
+            wheel = super.wheel.overridePythonAttrs (old: {
               version = "0.45.1";
               
-              src = oldAttrs.src.override {
+              src = old.src.override {
                 rev = "refs/tags/0.45.1";
                 hash = "sha256-tgueGEWByS5owdA5rhXGn3qh1Vtf0HGYC6+BHfrnGAs=";
               };
             });
-          };
+          });
         };
       })
     ];
