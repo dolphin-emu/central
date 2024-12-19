@@ -10,10 +10,10 @@
     overlay = nixpkgs.lib.composeManyExtensions [
       # Manually override wheel package to 0.45.1 until the change lands in nixos-24.11
       # https://github.com/NixOS/nixpkgs/pull/361930
-      (self: super: rec {
-        python3 = super.python3.override {
-          packageOverrides = python-self: python-super: {
-            wheel = python-super.wheel.overridePythonAttrs (oldAttrs: rec {
+      (final: prev: {
+        pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+          (python-final: python-prev: {
+            wheel = python-prev.wheel.overrideAttrs (oldAttrs: {
               version = "0.45.1";
               
               src = oldAttrs.src.override {
@@ -21,8 +21,8 @@
                 hash = "sha256-tgueGEWByS5owdA5rhXGn3qh1Vtf0HGYC6+BHfrnGAs=";
               };
             });
-          };
-        };
+          })
+        ];
       })
       poetry2nix.overlays.default
       (final: prev: {
