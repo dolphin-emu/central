@@ -18,10 +18,15 @@
             # https://github.com/NixOS/nixpkgs/pull/361930
             wheel = super.wheel.overridePythonAttrs (old: {
               version = "0.45.1";
-              
               src = old.src.override {
                 rev = "refs/tags/0.45.1";
                 hash = "sha256-tgueGEWByS5owdA5rhXGn3qh1Vtf0HGYC6+BHfrnGAs=";
+              };
+            });
+            setuptools = super.setuptools.overridePythonAttrs (old: {
+              version = "75.2.0";
+              src = old.src.override {
+                rev = "refs/tags/75.2.0";
               };
             });
           });
