@@ -7,6 +7,12 @@ irc:
         - "#dolphin-test"
     rebuild_repo: dolphin-emu/dolphin
 
+discord:
+    token: "token"
+    channels:
+        - 1234
+    privileged_role: 1234
+
 web:
     external_url: https://central.dolphin-emu.org
     bind: 127.0.0.1
