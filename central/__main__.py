@@ -8,6 +8,7 @@ from . import (
     admin,
     buildbot,
     config,
+    discord,
     events,
     git,
     github,
@@ -110,6 +111,7 @@ def main():
     for mod in [
         admin,
         buildbot,
+        discord,
         git,
         github,
         ircclient,
