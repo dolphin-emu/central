@@ -22,7 +22,8 @@ class Bot(Client):
 
         for channel_id in self.cfg.channels:
             channel = self.get_channel(channel_id)
-            asyncio.run_coroutine_threadsafe(channel.send(stripped_msg), self.loop)
+            f = asyncio.run_coroutine_threadsafe(channel.send(stripped_msg), self.loop)
+            f.result()
 
     async def on_message(self, message):
         if message.author == self.user or not self.user.mentioned_in(message):
