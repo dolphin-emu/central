@@ -229,12 +229,9 @@ class IRCRebuildListener(events.EventTarget):
         self.builder = builder
 
     def accept_event(self, evt):
-        return evt.type == events.IRCMessage.TYPE
+        return evt.type == events.CommandMessage.TYPE
 
     def push_event(self, evt):
-        trusted = "o" in evt.modes
-        if not evt.direct or not trusted:
-            return
         matches = re.search(r"\brebuild (pr ?)?(?P<pr_id>\d+)\b", evt.what, re.I)
         if not matches:
             return
@@ -243,7 +240,7 @@ class IRCRebuildListener(events.EventTarget):
             pr_id = int(pr_id)
         except ValueError:
             return
-        self.builder.push(evt.who, trusted, cfg.irc.rebuild_repo, pr_id)
+        self.builder.push(evt.who, True, cfg.irc.rebuild_repo, pr_id)
 
 
 class BuildStatusCollector:

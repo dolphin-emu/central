@@ -37,11 +37,11 @@ class Bot(IRC):
             trusted = "o" in modes
             if trusted:
                 self.message(channel, Tags.BoldLtGreen("WARK WARK WARK"))
+
+                evt = events.CommandMessage(str(who), msg)
+                events.dispatcher.dispatch("ircclient", evt)
             else:
                 self.message(channel, Tags.BoldRed("WARK WARK WARK"))
-
-        evt = events.IRCMessage(str(who), channel, msg, modes, direct)
-        events.dispatcher.dispatch("ircclient", evt)
 
 
 class EventTarget(events.EventTarget):

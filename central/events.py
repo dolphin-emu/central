@@ -78,9 +78,9 @@ def Notification(msg: str):
     return {"msg": msg}
 
 
-@event("irc_message")
-def IRCMessage(who: str, where: str, what: str, modes: str, direct: bool):
-    return {"who": who, "where": where, "what": what, "modes": modes, "direct": direct}
+@event("command_message")
+def CommandMessage(who: str, what: str):
+    return {"who": who, "what": what}
 
 
 @event("issue")

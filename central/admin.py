@@ -11,10 +11,10 @@ import time
 
 class RebootListener(events.EventTarget):
     def accept_event(self, evt):
-        return evt.type == events.IRCMessage.TYPE
+        return evt.type == events.CommandMessage.TYPE
 
     def push_event(self, evt):
-        if not evt.direct or not evt.what.endswith("reboot") or "o" not in evt.modes:
+        if not evt.what.endswith("reboot"):
             return
 
         main_file = os.path.join(os.path.dirname(__file__), "central.py")
