@@ -12,6 +12,7 @@ from . import (
     git,
     github,
     ircclient,
+    notifications,
     redmine,
     webserver,
     wiki,
@@ -106,7 +107,17 @@ def main():
     logging.info("Configuration loaded, starting modules initialization.")
 
     # Start the modules.
-    for mod in [admin, buildbot, git, github, ircclient, redmine, webserver, wiki]:
+    for mod in [
+        admin,
+        buildbot,
+        git,
+        github,
+        ircclient,
+        notifications,
+        redmine,
+        webserver,
+        wiki,
+    ]:
         mod.start()
 
     logging.info("Modules started, waiting for events.")
