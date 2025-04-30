@@ -128,6 +128,29 @@ class PullRequestBuilder:
                 events.dispatcher.dispatch("prbuilder", status_evt)
                 continue
 
+            if cfg.github.required_commits and repo in cfg.github.required_commits:
+                required_commit = getattr(cfg.github.required_commits, repo)
+
+                compare_url = pr["head"]["repo"]["compare_url"]
+                compare_result = requests.get(
+                    compare_url.format(base=required_commit, head=pr["head"]["ref"])
+                ).json()
+
+                if not compare_result["status"] in ["ahead", "identical"]:
+                    status_evt = events.BuildStatus(
+                        repo,
+                        head_sha,
+                        shortrev,
+                        "default",
+                        pr_id,
+                        False,
+                        False,
+                        "",
+                        "PR branch is too out-of-date, please rebase.",
+                    )
+                    events.dispatcher.dispatch("prbuilder", status_evt)
+                    continue
+
             # mergeable can be None!
             if pr["mergeable"] is False:
                 status_evt = events.BuildStatus(

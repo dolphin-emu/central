@@ -40,6 +40,8 @@ github:
         refresh_interval: 600
     hook_hmac_secret: SECRET
     rebuild_command: "@dolphin-emu-bot rebuild"
+    required_commits:
+        dolphin-emu/dolphin: deadbeef
 
 buildbot:
     url: https://dolphin.ci/
