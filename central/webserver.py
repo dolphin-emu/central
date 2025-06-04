@@ -52,7 +52,7 @@ def status():
     def display_recent_events(l):
         out.write("<pre>")
         for ts, e in reversed(l):
-            if e["type"] == "raw_redmine_hook":
+            if e.type == "raw_redmine_hook":
                 continue
             out.write(html.escape("%s\t%s\n" % (ts.isoformat(), e), quote=False))
         out.write("</pre>")
