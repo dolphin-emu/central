@@ -52,12 +52,16 @@ def status():
     def display_recent_events(l):
         out.write("<pre>")
         for ts, e in reversed(l):
+            if e["type"] == "raw_redmine_hook":
+                continue
             out.write(html.escape("%s\t%s\n" % (ts.isoformat(), e), quote=False))
         out.write("</pre>")
 
     out.write("<h3>Recent events</h3>")
     display_recent_events(event_logger.events)
     for type, events in sorted(event_logger.per_type.items()):
+        if type == "raw_redmine_hook":
+            continue
         out.write("<h3>Recent %r events</h3>" % type)
         display_recent_events(events)
 
