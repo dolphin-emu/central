@@ -3,7 +3,7 @@ name = "central"
 version = "0.1.0"
 description = "Dolphin's CI/CD plumbing infrastructure"
 authors = [{ name = "Pierre Bourdon", email = "delroth@dolphin-emu.org" }]
-requires-python = "~=3.10"
+requires-python = "~=3.10,<3.11"
 readme = "README.md"
 license = "MIT"
 dependencies = [
