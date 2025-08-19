@@ -29,7 +29,7 @@
       defaultPackage = pkgs.central;
 
       devShells.default = with pkgs; mkShell {
-        buildInputs = [ poetry ];
+        buildInputs = [ poetry uv ];
       };
     }
   ));
