@@ -22,8 +22,8 @@ $ nix run
 
 ```bash
 $ nix develop
-$ poetry install
-$ poetry run black --check .
-$ poetry run pytest
-$ poetry run central
+$ uv sync
+$ uv run black --check .
+$ uv run pytest
+$ uv run central
 ```
