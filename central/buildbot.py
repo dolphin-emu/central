@@ -4,6 +4,9 @@ GitHub."""
 from . import events, utils
 from .config import cfg
 
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 import collections
 import json
 import logging
@@ -90,6 +93,14 @@ class PullRequestBuilder:
     def __init__(self):
         self.queue = queue.Queue()
 
+        retry = Retry(total=3, backoff_factor=2)
+        adapter = HTTPAdapter(max_retries=retry)
+
+        session = requests.Session()
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        self.session = session
+
     def push(self, on_behalf_of, trusted, repo, pr_id):
         self.queue.put((on_behalf_of, trusted, repo, pr_id))
 
@@ -97,10 +108,26 @@ class PullRequestBuilder:
         while True:
             on_behalf_of, trusted, repo, pr_id = self.queue.get()
 
-            # To check if a PR is mergeable, we need to request it directly.
-            pr = requests.get(
-                "https://api.github.com/repos/%s/pulls/%d" % (repo, pr_id)
-            ).json()
+            try:
+                # To check if a PR is mergeable, we need to request it directly.
+                pr = self.session.get(
+                    "https://api.github.com/repos/%s/pulls/%d" % (repo, pr_id)
+                ).json()
+            except Exception as e:
+                status_evt = events.BuildStatus(
+                    repo,
+                    head_sha,
+                    shortrev,
+                    "default",
+                    pr_id,
+                    False,
+                    False,
+                    "",
+                    "An error occurred while checking mergeability, please try again.",
+                )
+                events.dispatcher.dispatch("prbuilder", status_evt)
+                continue
+
             logging.info(
                 "PR %s mergeable: %s (%s)",
                 pr_id,
@@ -131,10 +158,25 @@ class PullRequestBuilder:
             if cfg.github.required_commits and repo in cfg.github.required_commits:
                 required_commit = getattr(cfg.github.required_commits, repo)
 
-                compare_url = pr["head"]["repo"]["compare_url"]
-                compare_result = requests.get(
-                    compare_url.format(base=required_commit, head=pr["head"]["ref"])
-                ).json()
+                try:
+                    compare_url = pr["head"]["repo"]["compare_url"]
+                    compare_result = self.session.get(
+                        compare_url.format(base=required_commit, head=pr["head"]["ref"])
+                    ).json()
+                except Exception as e:
+                    status_evt = events.BuildStatus(
+                        repo,
+                        head_sha,
+                        shortrev,
+                        "default",
+                        pr_id,
+                        False,
+                        False,
+                        "",
+                        "An error occurred while checking if the PR was up to date, please try again.",
+                    )
+                    events.dispatcher.dispatch("prbuilder", status_evt)
+                    continue
 
                 if not compare_result["status"] in ["ahead", "identical"]:
                     status_evt = events.BuildStatus(
