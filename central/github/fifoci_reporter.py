@@ -1,6 +1,7 @@
 from .. import events, github
 from ..config import cfg
 
+import collections
 import requests
 import textwrap
 
@@ -28,18 +29,51 @@ class GHFifoCIEditer(events.EventTarget):
             rendering. Here are the [behavior differences](%s/version/%s/) \
             detected by the system:
 
+            <details>
+            <summary>Detected differences</summary>
+
         """
             % (cfg.fifoci.url, cfg.fifoci.url, evt.hash)
         )
-        for diff in diff_data:
-            l = "* `%s` on `%s`: " % (diff["dff"], diff["type"])
-            if diff["failure"]:
-                l += "[failed to render]"
+
+        system_types = sorted(set(entry["type"] for entry in diff_data))
+
+        table_header = "||"
+        table_divider = "|-|"
+
+        for system_type in system_types:
+            table_header += "%s|" % system_type
+            table_divider += "-|"
+
+        body += "%s\n%s\n" % (table_header, table_divider)
+
+        dff_dict = collections.defaultdict(dict)
+        for entry in diff_data:
+            replay = entry["dff"]
+
+            if entry["failure"]:
+                value = "❌ fail"
             else:
-                l += "[diff]"
-            l += "(%s%s)" % (cfg.fifoci.url, diff["url"])
-            body += l + "\n"
-        body += "\n<sub><sup>" + self.MAGIC_WORDS + "</sup></sub>"
+                value = "🔍 diff"
+
+            dff_dict[replay][entry["type"]] = "[%s](%s%s)" % (
+                value,
+                cfg.fifoci.url,
+                entry["url"],
+            )
+
+        table_rows = []
+
+        for replay in sorted(dff_dict.keys()):
+            row = "|%s|" % replay
+
+            for system_type in system_types:
+                row += "%s|" % dff_dict[replay].get(system_type, "-")
+
+            table_rows.append(row)
+
+        body += "%s\n</details>" % "\n".join(table_rows)
+        body += "\n<sub><sup>%s</sup></sub>" % self.MAGIC_WORDS
 
         if comments and comments[-1]["body"] == body:
             return
