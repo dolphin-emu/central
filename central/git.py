@@ -36,13 +36,19 @@ class GitRepository:
             "GIT_COMMITTER_EMAIL": "central@dolphin-emu.org",
         }
         logging.debug("[%s] running git command: %s", self.path, args)
-        out = subprocess.run(
-            (self.git_path,) + args,
-            cwd=self.path,
-            check=True,
-            env=env,
-            capture_output=True,
-        )
+
+        try:
+            out = subprocess.run(
+                (self.git_path,) + args,
+                cwd=self.path,
+                check=True,
+                env=env,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
+            logging.error("git command failed with stderr: %s" % e.stderr)
+            raise
+
         return out.stdout.decode("utf-8").strip()
 
     def clone(self, origin):
@@ -51,7 +57,7 @@ class GitRepository:
     def fetch(self):
         self.git_cli("fetch", "--all", "--tags", "--prune")
         self.git_cli("update-ref", "HEAD", "FETCH_HEAD")
-        self.git_cli("fetch", "origin", "refs/heads/*:refs/heads/*")
+        self.git_cli("fetch", "--force", "origin", "refs/heads/*:refs/heads/*")
 
     def commit_log(self, hash, format):
         return self.git_cli("log", "-1", f"--format=format:{format}", hash)
