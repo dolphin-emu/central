@@ -10,6 +10,7 @@ from discord import Client, Intents
 import asyncio
 import logging
 import queue
+import time
 
 
 class Bot(Client):
@@ -29,6 +30,9 @@ class Bot(Client):
         return "**WARK WARK WARK** (%s)" % ("accepted" if accepted else "denied")
 
     def send_dev_wark(self, accepted):
+        # Artifical delay to ensure that chat-bridge sends the command message first
+        time.sleep(1)
+
         text = self.format_wark_text(accepted)
         channel = self.get_channel(self.cfg.dev_channel)
 
