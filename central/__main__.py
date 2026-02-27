@@ -23,6 +23,7 @@ import argparse
 import functools
 import logging
 import logging.handlers
+import platform
 import signal
 import time
 
@@ -53,7 +54,8 @@ def setup_logging(program, verbose=False, local=True):
       local: If true, log to stdout as well as syslog.
     """
     loggers = []
-    loggers.append(logging.handlers.SysLogHandler("/dev/log"))
+    if platform.system() == "Linux":
+        loggers.append(logging.handlers.SysLogHandler("/dev/log"))
     loggers.append(EventLoggingHandler())
     if local:
         loggers.append(logging.StreamHandler())
