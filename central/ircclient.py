@@ -8,6 +8,7 @@ from pypeul import IRC, Tags
 
 import logging
 import queue
+import time
 
 
 class Bot(IRC):
@@ -42,6 +43,9 @@ class Bot(IRC):
         self.message(channel, text)
 
     def dev_wark(self, accepted):
+        # Artifical delay to ensure that chat-bridge sends the command message first
+        time.sleep(1)
+
         self.wark(self.cfg.dev_channel, accepted)
 
     def on_channel_message(self, who, channel, msg):
