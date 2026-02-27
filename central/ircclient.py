@@ -17,7 +17,11 @@ class Bot(IRC):
 
     def start(self):
         self.connect(self.cfg.server, self.cfg.port, self.cfg.ssl)
-        self.ident(self.cfg.nick)
+        self.ident(
+            self.cfg.nick,
+            sasl_username=self.cfg.sasl_username,
+            sasl_password=self.cfg.sasl_password,
+        )
         self.set_reconnect(lambda n: 10 * n)
         self.run()
 
@@ -80,11 +84,12 @@ def start():
     channels = cfg.irc.channels
 
     logging.info(
-        "Starting IRC client: server=%r port=%d ssl=%s nick=%r " "channels=%r",
+        "Starting IRC client: server=%r port=%d ssl=%s nick=%r sasl=%s channels=%r",
         server,
         port,
         ssl,
         nick,
+        cfg.irc.sasl_username is not None and cfg.irc.sasl_password is not None,
         channels,
     )
 
