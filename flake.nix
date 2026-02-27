@@ -30,6 +30,17 @@
           .overrideScope (pkgs.lib.composeManyExtensions [
             pyproject-build-systems.overlays.default
             overlay
+            (final: prev: {
+              pypeul = prev.pypeul.overrideAttrs (old: {
+                nativeBuildInputs = (old.nativeBuildInputs or []) ++ (with final; [
+                  hatchling
+                  pathspec
+                  pluggy
+                  packaging
+                  trove-classifiers
+                ]);
+              });
+            })
           ]);
         venv = pythonSet.mkVirtualEnv "central-env" workspace.deps.default;
       in {
