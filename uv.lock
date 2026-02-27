@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = "==3.10.*"
 
 [[package]]
@@ -132,7 +132,7 @@ requires-dist = [
     { name = "jwt", specifier = ">=1.3.1,<2" },
     { name = "mwclient", specifier = ">=0.10.1,<0.11" },
     { name = "pycryptodome", specifier = ">=3.16.0,<4" },
-    { name = "pypeul", specifier = ">=0.3.1,<0.4" },
+    { name = "pypeul", git = "https://github.com/dolphin-emu/pypeul?rev=9ca8f8896e51008f6179ca950152abc50484077f" },
     { name = "pyyaml", specifier = "~=6.0" },
     { name = "requests", specifier = ">=2.28.1,<3" },
 ]
@@ -495,11 +495,7 @@ wheels = [
 [[package]]
 name = "pypeul"
 version = "0.3.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8f/be/deecec7f883a91f84384071f3c58fbf4727aef9f1383cdf27eee02c43dab/pypeul-0.3.2.tar.gz", hash = "sha256:55a3d8f240bb04d521bf6e7af7968b9f9781ad7f947d74f96e434f1e69c0044a", size = 13221, upload-time = "2022-12-23T20:40:05.864Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/57/fa7a659713e616bfbbc4da5cbd51aeeac6c1fed408411e805e780d5ff8fe/pypeul-0.3.2-py3-none-any.whl", hash = "sha256:1173b0ba84985e8b43c11ae35918d72b5eb14e2d5b5fb702aa89a90b2df47d61", size = 15936, upload-time = "2022-12-23T20:40:04.608Z" },
-]
+source = { git = "https://github.com/dolphin-emu/pypeul?rev=9ca8f8896e51008f6179ca950152abc50484077f#9ca8f8896e51008f6179ca950152abc50484077f" }
 
 [[package]]
 name = "pytest"
