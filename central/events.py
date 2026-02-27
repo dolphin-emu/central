@@ -83,6 +83,11 @@ def CommandMessage(who: str, what: str):
     return {"who": who, "what": what}
 
 
+@event("dev_wark")
+def DevWark(accepted: bool):
+    return {"accepted": accepted}
+
+
 @event("issue")
 def Issue(new: bool, update: int, issue: int, title: str, author: str):
     return {
