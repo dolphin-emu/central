@@ -33,6 +33,17 @@ class Bot(IRC):
         for chan in self.cfg.channels:
             self.message(chan, what)
 
+    def wark(self, channel, accepted):
+        if accepted:
+            text = Tags.BoldLtGreen("WARK WARK WARK")
+        else:
+            text = Tags.BoldRed("WARK WARK WARK")
+
+        self.message(channel, text)
+
+    def dev_wark(self, accepted):
+        self.wark(self.cfg.dev_channel, accepted)
+
     def on_channel_message(self, who, channel, msg):
         direct = msg.startswith(self.cfg.nick)
         modes = who.user.modes_in(channel)
@@ -40,12 +51,14 @@ class Bot(IRC):
         if direct:
             trusted = "o" in modes
             if trusted:
-                self.message(channel, Tags.BoldLtGreen("WARK WARK WARK"))
-
                 evt = events.CommandMessage(str(who), msg)
                 events.dispatcher.dispatch("ircclient", evt)
+
+            if channel == self.cfg.dev_channel:
+                wark_evt = events.DevWark(trusted)
+                events.dispatcher.dispatch("ircclient", wark_evt)
             else:
-                self.message(channel, Tags.BoldRed("WARK WARK WARK"))
+                self.wark(channel, trusted)
 
 
 class EventTarget(events.EventTarget):
@@ -59,6 +72,7 @@ class EventTarget(events.EventTarget):
     def accept_event(self, evt):
         accepted_types = [
             events.Notification.TYPE,
+            events.DevWark.TYPE,
         ]
         return evt.type in accepted_types
 
@@ -67,6 +81,8 @@ class EventTarget(events.EventTarget):
             evt = self.queue.get()
             if evt.type == events.Notification.TYPE:
                 self.bot.say(evt.msg)
+            elif evt.type == events.DevWark.TYPE:
+                self.bot.dev_wark(evt.accepted)
             else:
                 logging.error("Got unknown event for irc: %r" % evt.type)
 
