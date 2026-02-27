@@ -5,12 +5,14 @@ irc:
     nick: irrawaddy-test
     channels:
         - "#dolphin-test"
+    dev_channel: "#dolphin-test"
     rebuild_repo: dolphin-emu/dolphin
 
 discord:
     token: "token"
     channels:
         - 1234
+    dev_channel: 1234
     privileged_role: 1234
 
 web:

@@ -25,17 +25,33 @@ class Bot(Client):
             f = asyncio.run_coroutine_threadsafe(channel.send(stripped_msg), self.loop)
             f.result()
 
+    def format_wark_text(self, accepted):
+        return "**WARK WARK WARK** (%s)" % ("accepted" if accepted else "denied")
+
+    def send_dev_wark(self, accepted):
+        text = self.format_wark_text(accepted)
+        channel = self.get_channel(self.cfg.dev_channel)
+
+        f = asyncio.run_coroutine_threadsafe(channel.send(text), self.loop)
+        f.result()
+
     async def on_message(self, message):
         if message.author == self.user or not self.user.mentioned_in(message):
             return
+
+        accepted = False
 
         if message.author.get_role(self.cfg.privileged_role) != None:
             evt = events.CommandMessage(message.author.name, message.content)
             events.dispatcher.dispatch("discord", evt)
 
-            await message.channel.send("**WARK WARK WARK** (accepted)")
+            accepted = True
+
+        if message.channel.id == self.cfg.dev_channel:
+            wark_evt = events.DevWark(accepted)
+            events.dispatcher.dispatch("discord", wark_evt)
         else:
-            await message.channel.send("**WARK WARK WARK** (denied)")
+            await message.channel.send(self.format_wark_text(accepted))
 
 
 class EventTarget(events.EventTarget):
@@ -49,6 +65,7 @@ class EventTarget(events.EventTarget):
     def accept_event(self, evt):
         accepted_types = [
             events.Notification.TYPE,
+            events.DevWark.TYPE,
         ]
         return evt.type in accepted_types
 
@@ -57,6 +74,8 @@ class EventTarget(events.EventTarget):
             evt = self.queue.get()
             if evt.type == events.Notification.TYPE:
                 self.bot.send_notification(evt.msg)
+            elif evt.type == events.DevWark.TYPE:
+                self.bot.send_dev_wark(evt.accepted)
             else:
                 logging.error("Got unknown event for discord: %r" % evt.type)
 
