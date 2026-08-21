@@ -125,7 +125,7 @@ class OrgAuth(requests.auth.AuthBase):
 def check_app_configuration():
     app = requests.get("https://api.github.com/app", auth=AppAuth()).json()
 
-    for (perm, val) in sorted(_EXPECTED_PERMS.items()):
+    for perm, val in sorted(_EXPECTED_PERMS.items()):
         if perm not in app["permissions"]:
             logging.error("Missing GH app permission: %s (should be: %s)", perm, val)
         elif val != app["permissions"][perm]:

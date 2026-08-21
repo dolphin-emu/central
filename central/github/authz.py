@@ -5,7 +5,6 @@ from ..config import cfg
 
 import logging
 
-
 _TRUSTED_USERS = set()
 _CORE_USERS = set()
 

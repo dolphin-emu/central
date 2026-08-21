@@ -23,8 +23,7 @@ class GHFifoCIEditer(events.EventTarget):
             c for c in comments if c["user"]["login"] == cfg.github.app.username
         ]
 
-        body = textwrap.dedent(
-            """\
+        body = textwrap.dedent("""\
             [FifoCI](%s/about/) detected that this change impacts graphical \
             rendering. Here are the [behavior differences](%s/version/%s/) \
             detected by the system:
@@ -32,9 +31,7 @@ class GHFifoCIEditer(events.EventTarget):
             <details>
             <summary>Detected differences</summary>
 
-        """
-            % (cfg.fifoci.url, cfg.fifoci.url, evt.hash)
-        )
+        """ % (cfg.fifoci.url, cfg.fifoci.url, evt.hash))
 
         system_types = sorted(set(entry["type"] for entry in diff_data))
 
