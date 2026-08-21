@@ -9,16 +9,12 @@ import unittest
 
 class TestConfig(unittest.TestCase):
     def test_basic(self):
-        config.load(
-            io.StringIO(
-                """
+        config.load(io.StringIO("""
         test:
             inner:
                 val: 42
                 foo: bar
-        """
-            )
-        )
+        """))
         self.assertEqual(cfg.test.inner.val, 42)
         self.assertEqual(cfg.test.inner.foo, "bar")
 
@@ -28,11 +24,7 @@ class TestConfig(unittest.TestCase):
             with open(path, "w") as fp:
                 fp.write("hello")
 
-            config.load(
-                io.StringIO(
-                    f"""
+            config.load(io.StringIO(f"""
                 test: !FileInclude "{path}"
-            """
-                )
-            )
+            """))
             self.assertEqual(cfg.test, "hello")
